@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>财务管家 (滑动交互版)</title>
+    <title>财务管家 (修复版)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* === 保持原版 UI 变量 === */
@@ -38,7 +38,7 @@
             display: flex; flex-direction: column;
         }
 
-        /* === 🎬 页面切换动画 (果冻弹跳) === */
+        /* === 🎬 页面切换动画 === */
         @keyframes springUp {
             0% { transform: scale(0.96) translateY(10px); opacity: 0; }
             60% { transform: scale(1.01) translateY(-2px); opacity: 1; }
@@ -123,16 +123,16 @@
         .c-in { color: var(--success); } .c-out { color: var(--danger); }
         .c-save { color: var(--primary); } .c-debt { color: var(--warning); }
 
-        /* === 📝 表单样式 (强制左对齐) === */
+        /* === 📝 表单样式 (左对齐) === */
         .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
         .form-col { flex: 1; }
         label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; font-weight: 500; text-align: left; }
         
         input, select {
-            width: 100%; padding: 10px 10px; /* 保持左边距一致 */
+            width: 100%; padding: 10px 10px;
             border: 1px solid #eee; background: #f9f9f9;
             border-radius: 10px; font-size: 15px; outline: none; -webkit-appearance: none;
-            text-align: left; /* 核心：吸在左边 */
+            text-align: left;
         }
         input:focus, select:focus { background: #fff; border-color: var(--primary); }
         
@@ -140,7 +140,7 @@
             width: 100%; padding: 14px; border: none; border-radius: 12px;
             background: var(--danger); color: white; font-size: 16px; font-weight: bold;
             box-shadow: 0 4px 10px rgba(255, 118, 117, 0.4); cursor: pointer; transition: transform 0.1s;
-            text-align: center; /* 按钮文字居中 */
+            text-align: center;
         }
         .btn-submit:active { transform: scale(0.96); }
 
@@ -172,6 +172,7 @@
         .btn-recover { background: #f3e5f5; color: #9c27b0; }
         .btn-excel { background: #e8f5e9; color: #4caf50; }
         
+        /* === 🔧 分类管理 === */
         .cat-list { list-style: none; padding: 0; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; max-height: 200px; overflow-y: auto;}
         .cat-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
         .cat-name-span { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
@@ -194,50 +195,23 @@
 
         /* === 🎬 动画层 === */
         #anim-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 11000; overflow: hidden; display: none;}
-        .run-anim { 
-            position: absolute; top: 50%; right: -150px; transform: translateY(-50%);
-            animation: runAcross 2.5s linear forwards; 
-            display: flex; align-items: center; font-size: 90px;
-        }
+        .run-anim { position: absolute; top: 50%; right: -150px; transform: translateY(-50%); animation: runAcross 2.5s linear forwards; display: flex; align-items: center; font-size: 90px; }
         .bounce-body { animation: bounce 0.3s infinite alternate; position: relative; }
         .money-tag { position: absolute; font-size: 40px; top: 0; left: 25px; z-index: 2; transform: rotate(-10deg); }
         @keyframes runAcross { 0% { right: -150px; transform: translateY(-50%) translateX(0); } 100% { right: 100%; transform: translateY(-50%) translateX(-100px); } }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-        
-        .pop-anim { 
-            position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(0); 
-            font-size: 100px; animation: popIn 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
-            text-align: center; white-space: nowrap; z-index: 11001;
-        }
-        .pop-text { 
-            display: block; font-size: 24px; color: #fdcb6e; margin-top: 15px; 
-            font-weight: bold; background: #fff; padding: 10px 25px; 
-            border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
+        .pop-anim { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(0); font-size: 100px; animation: popIn 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; text-align: center; white-space: nowrap; z-index: 11001; }
+        .pop-text { display: block; font-size: 24px; color: #fdcb6e; margin-top: 15px; font-weight: bold; background: #fff; padding: 10px 25px; border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0;} 50% { opacity: 1;} 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
 
         /* === 🧭 聚光灯指引 === */
         #spotlight-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9990; display: none; }
-        .spotlight-box {
-            position: absolute; border-radius: 12px;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
-            border: 2px solid rgba(255,255,255,0.8); pointer-events: none;
-        }
-        .guide-tooltip {
-            position: fixed; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 300px;
-            background: #fff; padding: 25px;
-            border-radius: 16px; text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.6);
-            z-index: 10002; opacity: 0;
-            transition: opacity 0.3s, bottom 0.4s, top 0.4s; pointer-events: auto;
-        }
+        .spotlight-box { position: absolute; border-radius: 12px; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); border: 2px solid rgba(255,255,255,0.8); pointer-events: none; }
+        .guide-tooltip { position: fixed; left: 50%; transform: translateX(-50%); width: 85%; max-width: 300px; background: #fff; padding: 25px; border-radius: 16px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.6); z-index: 10002; opacity: 0; transition: opacity 0.3s, bottom 0.4s, top 0.4s; pointer-events: auto; }
         .guide-tooltip.show { opacity: 1; }
         .guide-tooltip.bottom-mode { top: auto; bottom: 120px; }
         .guide-tooltip.top-mode { bottom: auto; top: 80px; }
         .guide-tooltip.center-mode { top: 50%; bottom: auto; transform: translate(-50%, -50%); }
-
         .guide-lion { font-size: 40px; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background:#fff; border-radius:50%; width:50px; height:50px; line-height:50px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .guide-title { font-size: 16px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: var(--primary); }
         .guide-text { font-size: 14px; color: #666; margin-bottom: 15px; line-height: 1.5; }
@@ -247,23 +221,22 @@
         .btn-next { background: var(--primary); color: white; }
         .guide-highlight { position: relative; z-index: 10000 !important; box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.6), 0 0 0 9999px rgba(0,0,0,0.75) !important; transition: all 0.3s; background-color: var(--card-bg); }
 
-        #success-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); 
-            z-index: 12000; display: none; 
-            align-items: center; justify-content: center;
-        }
-        .success-box {
-            background: transparent; padding: 40px; 
-            text-align: center; color: #fff;
-            animation: popInSuccess 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
+        #success-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 12000; display: none; align-items: center; justify-content: center; }
+        .success-box { background: transparent; padding: 40px; text-align: center; color: #fff; animation: popInSuccess 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .success-icon { font-size: 100px; margin-bottom: 20px; display: inline-block; animation: bounceIcon 1s infinite alternate; }
         .success-text { font-size: 30px; font-weight: 900; color: #fdcb6e; text-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         @keyframes popInSuccess { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes bounceIcon { from { transform: translateY(0); } to { transform: translateY(-20px); } }
 
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 25px; border-radius: 30px; font-size: 14px; z-index: 10004; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        /* === 🎯 提示框优化：居中 + 延时 === */
+        #toast { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); /* 绝对居中 */
+            background: rgba(0,0,0,0.85); color: white; padding: 15px 30px; 
+            border-radius: 12px; font-size: 15px; font-weight: bold;
+            z-index: 13000; opacity: 0; transition: opacity 0.3s; pointer-events: none; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
         #toast.show { opacity: 1; }
         
         #file-input { display: none; }
@@ -420,7 +393,7 @@
 
         // 特殊初始化
         if(viewName === 'charts') renderChartsPage(); 
-        if(viewName === 'settings') renderManageList();
+        if(viewName === 'settings') renderManageList(); // 修复：进入设置自动渲染列表
     }
 
     // === 滑动监听 ===
@@ -439,6 +412,7 @@
         const diffX = touchEndX - touchStartX;
         const diffY = touchEndY - touchStartY;
 
+        // 确保是水平滑动 (防误触垂直滚动)
         if(Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > minSwipeDist) {
             if(diffX < 0) { // 左滑 -> 下一页
                 if(currentViewIndex < 2) switchView(viewList[currentViewIndex + 1]);
@@ -552,9 +526,10 @@
         }
     }
 
+    let toastTimer;
     function showToast(msg) {
         const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show');
-        clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     function setBudget() {
@@ -572,6 +547,32 @@
         if(type==='expense') { btn.style.background = 'var(--danger)'; btn.innerText = '💸 确认支出'; }
         else if(type==='income') { btn.style.background = 'var(--success)'; btn.innerText = '💰 确认收入'; }
         else { btn.style.background = 'var(--primary)'; btn.innerText = '✨ 提交记录'; }
+    }
+
+    // 修复：导入逻辑优化，避免假报错
+    window.importData = function(input) {
+        const file = input.files[0]; if(!file) return;
+        const r = new FileReader();
+        r.onload = e => {
+            try {
+                // 1. 先尝试解析
+                const data = JSON.parse(e.target.result);
+                // 2. 校验数据格式
+                if (!Array.isArray(data)) throw new Error("Format Error");
+                // 3. 存入
+                transactions = data;
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                // 4. 刷新界面
+                updateHomeStats();
+                if(currentViewIndex === 1) renderChartsPage();
+                showToast("✅ 数据已恢复");
+            } catch(err) {
+                console.error(err);
+                showToast("❌ 文件格式错误");
+            }
+        };
+        r.readAsText(file);
+        input.value = '';
     }
 
     document.getElementById('transaction-form').addEventListener('submit', function(e) {
@@ -740,7 +741,6 @@
         });
     }
 
-    // === 🔧 分类管理列表渲染优化 ===
     function renderManageList() {
         const type = document.getElementById('manage-type-select').value;
         const ul = document.getElementById('manage-list');
@@ -802,12 +802,6 @@
     window.exportData = function() {
         playSound('swoosh'); const str = JSON.stringify(transactions);
         const link = document.createElement('a'); link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(str); link.download = 'backup.json'; link.click();
-    }
-    window.importData = function(input) {
-        const file = input.files[0]; if(!file) return;
-        const r = new FileReader();
-        r.onload = e => { try { transactions = JSON.parse(e.target.result); updateHomeStats(); showToast("✅ 数据已恢复"); } catch(e) { showToast("❌ 文件错误"); } };
-        r.readAsText(file); input.value = '';
     }
 
     const today = new Date();
