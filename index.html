@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>财务管家 </title>
+    <title>财务管家</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* === 变量定义 === */
@@ -16,25 +16,22 @@
             --bg: #f7f8fa;
             --card-bg: #ffffff;
             --nav-height: 60px;
-            /* 兼容性优化：底部安全区变量 */
             --safe-bottom: env(safe-area-inset-bottom, 20px); 
         }
 
         /* === 核心兼容性重置 === */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: #333;
             margin: 0; padding: 0;
-            /* 兼容性优化：解决iOS Safari地址栏变化导致的视口高度跳动 */
-            height: 100vh; 
-            height: 100dvh; 
+            height: 100vh; height: 100dvh; 
             min-height: -webkit-fill-available;
             overflow: hidden;
             display: flex; flex-direction: column;
-            user-select: none; /* 防止长按选中文本 */
+            user-select: none;
         }
 
         #app {
@@ -53,10 +50,9 @@
 
         .view-container {
             flex: 1; overflow-y: auto; padding: 20px;
-            /* 兼容性优化：底部留白确保不被导航栏遮挡 */
             padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
             display: none; opacity: 0;
-            -webkit-overflow-scrolling: touch; /* iOS 滚动回弹 */
+            -webkit-overflow-scrolling: touch;
         }
         .view-container.active { 
             display: block; opacity: 1; 
@@ -67,7 +63,6 @@
         .bottom-nav {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 600px;
-            /* 兼容性优化：高度计算 */
             height: calc(var(--nav-height) + var(--safe-bottom));
             padding-bottom: var(--safe-bottom);
             background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -129,27 +124,45 @@
         .c-in { color: var(--success); } .c-out { color: var(--danger); }
         .c-save { color: var(--primary); } .c-debt { color: var(--warning); }
 
-        /* === 表单优化 === */
-        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .form-col { flex: 1; }
-        label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; font-weight: 500; text-align: left; }
+        /* === 表单优化 (重点优化区域：输入框统一、居中、适配) === */
+        .form-row { display: flex; gap: 12px; margin-bottom: 15px; }
+        .form-col { flex: 1; display: flex; flex-direction: column; }
+        label { display: block; font-size: 12px; color: #666; margin-bottom: 6px; font-weight: 500; text-align: center; }
         
+        /* 统一输入框样式：日期、金额、下拉框 */
         input, select {
-            width: 100%; padding: 10px 10px;
+            width: 100%; 
+            height: 44px; /* 统一高度 */
+            line-height: normal; /* 重置行高 */
+            padding: 0 10px;
             border: 1px solid #eee; background: #f9f9f9;
-            border-radius: 10px; font-size: 15px; outline: none; 
+            border-radius: 10px; 
+            
+            /* 字体大小 16px 防止 iOS 自动放大 */
+            font-size: 16px; 
+            
+            /* 内容强制居中 */
+            text-align: center;
+            text-align-last: center; /* 适配部分安卓浏览器下拉框文字居中 */
+            
             -webkit-appearance: none; /* iOS 移除默认样式 */
             appearance: none;
-            text-align: left;
             user-select: text;
         }
+
+        /* 修复 iOS 日期选择器内容左对齐的问题 */
+        input[type="date"] {
+            display: block; /* 解决部分布局问题 */
+            line-height: 44px; /* 垂直居中 */
+        }
+        
         input:focus, select:focus { background: #fff; border-color: var(--primary); }
         
         .btn-submit {
-            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            width: 100%; height: 48px; border: none; border-radius: 12px;
             background: var(--danger); color: white; font-size: 16px; font-weight: bold;
             box-shadow: 0 4px 10px rgba(255, 118, 117, 0.4); cursor: pointer; transition: transform 0.1s;
-            text-align: center;
+            text-align: center; display: flex; align-items: center; justify-content: center;
         }
         .btn-submit:active { transform: scale(0.96); }
 
@@ -211,11 +224,10 @@
         .pop-text { display: block; font-size: 24px; color: #fdcb6e; margin-top: 15px; font-weight: bold; background: #fff; padding: 10px 25px; border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0;} 50% { opacity: 1;} 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
 
-        /* === 🧭 聚光灯指引 (优化重点) === */
+        /* === 🧭 聚光灯指引 (优化重点：智能定位) === */
         #spotlight-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            /* 优化：允许接收点击事件，实现“点击空白下一步” */
-            pointer-events: auto; 
+            pointer-events: auto; /* 允许接收点击 */
             z-index: 9990; display: none; 
         }
         
@@ -224,20 +236,21 @@
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
             box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); 
             border: 2px solid rgba(255,255,255,0.8); 
-            pointer-events: none; /* 让点击穿透高亮区域，直达下方元素(如需交互) */
+            pointer-events: none; /* 透传点击 */
         }
         
         .guide-tooltip { 
-            position: fixed; left: 50%; transform: translateX(-50%); 
+            position: fixed; left: 50%; 
+            /* 初始位置，具体top/bottom由JS动态计算 */
+            transform: translateX(-50%); 
             width: 85%; max-width: 300px; background: #fff; padding: 25px; 
             border-radius: 16px; text-align: center; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.6); 
             z-index: 10002; opacity: 0; 
-            transition: opacity 0.3s, bottom 0.4s, top 0.4s; 
-            pointer-events: auto; /* 提示框本身可点击 */
+            transition: opacity 0.3s, top 0.3s, bottom 0.3s; 
+            pointer-events: auto; 
         }
         
-        /* 优化：提示框的高亮样式 (用于底部导航指引) */
         .guide-tooltip.highlight-active {
             border: 3px solid var(--primary-light);
             box-shadow: 0 0 30px rgba(78, 84, 200, 0.6), 0 10px 40px rgba(0,0,0,0.5);
@@ -251,9 +264,7 @@
         }
 
         .guide-tooltip.show { opacity: 1; }
-        .guide-tooltip.bottom-mode { top: auto; bottom: 120px; }
-        .guide-tooltip.top-mode { bottom: auto; top: 80px; }
-        .guide-tooltip.center-mode { top: 50%; bottom: auto; transform: translate(-50%, -50%); }
+        
         .guide-lion { font-size: 40px; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background:#fff; border-radius:50%; width:50px; height:50px; line-height:50px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .guide-title { font-size: 16px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: var(--primary); }
         .guide-text { font-size: 14px; color: #666; margin-bottom: 15px; line-height: 1.5; }
@@ -305,12 +316,37 @@
         <div class="card" style="margin-top: 16px;" id="target-form">
             <div class="card-title">✏️ 快速记账</div>
             <form id="transaction-form">
-                <div class="form-row"><div class="form-col"><label>日期</label><input type="date" id="date" required /></div><div class="form-col"><label>金额</label><input type="number" id="amount" placeholder="0.00" step="0.01" required inputmode="decimal"/></div></div>
                 <div class="form-row">
-                    <div class="form-col"><label>类型</label><select id="type" onchange="updateCategoryOptions()"><option value="expense">支出 (-)</option><option value="income">收入 (+)</option><option value="savings_in">存入储蓄</option><option value="savings_out">取出储蓄</option><option value="debt_out">借出债权</option><option value="debt_in">收回债权</option></select></div>
-                    <div class="form-col"><label>分类</label><select id="category"></select></div>
+                    <div class="form-col">
+                        <label>日期</label>
+                        <input type="date" id="date" required />
+                    </div>
+                    <div class="form-col">
+                        <label>金额</label>
+                        <input type="number" id="amount" placeholder="0.00" step="0.01" required inputmode="decimal"/>
+                    </div>
                 </div>
-                <div class="form-control" style="margin-bottom: 15px;"><label>备注 (选填)</label><input type="text" id="text" placeholder="例如：早餐、打车..." /></div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>类型</label>
+                        <select id="type" onchange="updateCategoryOptions()">
+                            <option value="expense">支出 (-)</option>
+                            <option value="income">收入 (+)</option>
+                            <option value="savings_in">存入储蓄</option>
+                            <option value="savings_out">取出储蓄</option>
+                            <option value="debt_out">借出债权</option>
+                            <option value="debt_in">收回债权</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label>分类</label>
+                        <select id="category"></select>
+                    </div>
+                </div>
+                <div class="form-control" style="margin-bottom: 15px;">
+                    <label style="text-align: left; margin-left: 5px;">备注 (选填)</label>
+                    <input type="text" id="text" placeholder="例如：早餐、打车..." style="text-align: left; padding-left: 15px;" />
+                </div>
                 <button type="submit" id="btn-submit" class="btn-submit">记一笔</button>
             </form>
         </div>
@@ -356,7 +392,7 @@
         <div class="card">
             <div class="card-title">📜 筛选明细</div>
             <div class="form-row">
-                <input type="text" id="search-input" placeholder="🔍 搜备注/分类..." oninput="renderFullList()">
+                <input type="text" id="search-input" placeholder="🔍 搜备注/分类..." oninput="renderFullList()" style="text-align:left; padding-left:10px;">
                 <select id="filter-select" style="width: 100px;" onchange="renderFullList()"><option value="all">全部</option><option value="expense">支出</option><option value="income">收入</option><option value="debt">债权</option></select>
             </div>
             <ul id="full-list" class="trans-list"></ul>
@@ -397,7 +433,7 @@
 
 <div id="spotlight-overlay" onclick="handleOverlayClick(event)">
     <div class="spotlight-box" id="spotlight-box"></div>
-    <div class="guide-tooltip center-mode" id="guide-tooltip" onclick="event.stopPropagation()">
+    <div class="guide-tooltip" id="guide-tooltip" onclick="event.stopPropagation()">
         <div class="guide-lion">🦁</div>
         <div class="guide-title" id="guide-title">Title</div>
         <div class="guide-text" id="guide-text">Text</div>
@@ -450,9 +486,7 @@
         const diffX = touchEndX - touchStartX;
         const diffY = touchEndY - touchStartY;
 
-        // 屏蔽垂直滚动中的误触
         if(Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > minSwipeDist) {
-            // 如果指引正在显示，禁止滑动切页
             if(document.getElementById('spotlight-overlay').style.display === 'block') return;
             
             if(diffX < 0) { // 左滑
@@ -487,12 +521,12 @@
         renderChartsPage();
     }
 
-    // === 指引逻辑优化 ===
+    // === 指引逻辑 ===
     let guideStep = 0;
     const guideData = [
         { id: 'start', title: "欢迎新朋友！", text: "我是你的财务小狮子。\n花 1 分钟带你熟悉一下新家吧！(点击空白处继续)", target: null },
         { id: 'budget', title: "💰 设置预算", text: "点击这里设置本月预算。\n快花超的时候我会提醒你哦！", target: 'target-budget' },
-        { id: 'form', title: "✏️ 极速记账", text: "日期、金额、分类，一屏搞定！\n金额不能为0，你可以【直接操作】，记完一笔我会自动带你继续！", target: 'target-form' },
+        { id: 'form', title: "✏️ 极速记账", text: "日期、金额、分类，一屏搞定！\n所有输入项已优化，居中显示更清晰。", target: 'target-form' },
         { id: 'chart', title: "📊 图表分析", text: "自动生成收支饼图，\n支持在 🍩饼图 和 📊条形图 之间切换！", target: 'target-chart' },
         { id: 'backup', title: "💾 数据防丢", text: "重要！这是单机网页版。\n清缓存或换手机前，务必点【下载备份】！", target: 'target-backup' },
         { id: 'nav', title: "🧭 随时切换", text: "底部导航栏随时切换页面。\n支持左右滑动切换页面哦！🚀", target: 'target-nav' }
@@ -507,9 +541,7 @@
         renderGuideStep(guideStep); 
     }
 
-    // 优化：处理遮罩层点击
     window.handleOverlayClick = function(e) {
-        // 如果点击的是遮罩层背景 或 高亮框的阴影区域
         if(e.target.id === 'spotlight-overlay' || e.target.classList.contains('spotlight-box')) {
             nextGuide();
         }
@@ -518,7 +550,7 @@
     function endGuide() { 
         document.getElementById('spotlight-overlay').style.display = 'none'; 
         document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight')); 
-        document.getElementById('guide-tooltip').classList.remove('highlight-active'); // 移除高亮
+        document.getElementById('guide-tooltip').classList.remove('highlight-active');
         localStorage.setItem('hasSeenGuide', 'true'); 
         switchView('home'); 
     }
@@ -543,12 +575,10 @@
         document.getElementById('guide-title').innerText = step.title;
         document.getElementById('guide-text').innerText = step.text;
         
-        // 自动跳转页面
         if (step.id === 'chart') switchView('charts');
         if (step.id === 'backup') switchView('settings');
         if (step.id === 'nav' || step.id === 'budget') switchView('home');
 
-        // 优化：底部导航指引时，高亮提示框本身
         if (step.id === 'nav') {
             tooltip.classList.add('highlight-active');
         } else {
@@ -558,13 +588,13 @@
         document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
         
         setTimeout(() => {
-            tooltip.classList.remove('top-mode', 'bottom-mode', 'center-mode');
-            
             if (step.target) {
                 const targetEl = document.getElementById(step.target);
                 if(targetEl) {
                     targetEl.classList.add('guide-highlight');
                     const rect = targetEl.getBoundingClientRect();
+                    
+                    // 1. 设置高亮框位置
                     spotBox.style.width = rect.width + 'px';
                     spotBox.style.height = rect.height + 'px';
                     spotBox.style.top = rect.top + 'px';
@@ -572,17 +602,42 @@
                     spotBox.style.borderRadius = getComputedStyle(targetEl).borderRadius;
                     spotBox.style.opacity = 1;
                     
-                    const screenH = window.innerHeight;
-                    if ((rect.top + rect.height / 2) < screenH * 0.55) tooltip.classList.add('bottom-mode');
-                    else tooltip.classList.add('top-mode');
+                    // 2. 智能计算提示框位置 (核心优化)
+                    autoPositionTooltip(rect, tooltip);
                     
                     tooltip.classList.add('show');
                 }
             } else {
                 spotBox.style.opacity = 0; spotBox.style.top = '-1000px'; 
-                tooltip.classList.add('center-mode'); tooltip.classList.add('show');
+                // 居中复位
+                tooltip.style.top = '50%';
+                tooltip.style.bottom = 'auto';
+                tooltip.style.transform = 'translate(-50%, -50%)';
+                tooltip.classList.add('show');
             }
         }, 150);
+    }
+
+    // 智能定位算法：根据剩余空间自动判断放在上方还是下方
+    function autoPositionTooltip(targetRect, tooltipEl) {
+        const screenH = window.innerHeight;
+        const gap = 20; // 间距
+        const tooltipH = 200; // 预估最大高度
+        
+        const spaceAbove = targetRect.top;
+        const spaceBelow = screenH - targetRect.bottom;
+        
+        tooltipEl.style.transform = 'translateX(-50%)'; // 保持水平居中
+
+        if (spaceBelow < tooltipH && spaceAbove > spaceBelow) {
+            // 放上面
+            tooltipEl.style.bottom = (screenH - targetRect.top + gap) + 'px';
+            tooltipEl.style.top = 'auto';
+        } else {
+            // 放下面
+            tooltipEl.style.top = (targetRect.bottom + gap) + 'px';
+            tooltipEl.style.bottom = 'auto';
+        }
     }
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
